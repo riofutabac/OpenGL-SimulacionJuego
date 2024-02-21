@@ -16,6 +16,8 @@
 
 #include <vector>
 
+// Estructura para almacenar las transformaciones de cada modelo
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -55,7 +57,7 @@ glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 int main()
 {
 
-  
+
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
@@ -93,6 +95,7 @@ int main()
     }
 
 
+
     // configure global opengl state
     //Exercise 11 Task 3
     // -----------------------------
@@ -104,17 +107,13 @@ int main()
     Shader ourShader("shaders/shader_exercise16_mloading.vs", "shaders/shader_exercise16_mloading.fs");
 
     // load models
-    std::vector<Model> modelos;
-    std::vector<std::string> rutasModelos = {
-    "C:/Users/Alexis Lapo/Documents/ProyectoCompuGrafica/Proyecto/Proyecto/model/oldtree/scene.gltf",
-    "C:/Users/Alexis Lapo/Documents/ProyectoCompuGrafica/Proyecto/Proyecto/model/tree/scene.gltf",
-    // Agrega más rutas según necesites
-    };
-    // Cargar cada modelo y añadirlo al vector
-    for (const auto& ruta : rutasModelos) {
-        Model modelo(ruta); // Asume que tu constructor de Model puede tomar una ruta como argumento
-        modelos.push_back(modelo);
-    }
+ 
+    Model arbolViejo("C:/Users/Alexis Lapo/Documents/ProyectoCompuGrafica/Proyecto/Proyecto/model/tree/scene.gltf");
+    Model arbol("C:/Users/Alexis Lapo/Documents/ProyectoCompuGrafica/Proyecto/Proyecto/model/oldtree/scene.gltf");
+    Model linterna("C:/Users/Alexis Lapo/Documents/ProyectoCompuGrafica/Proyecto/Proyecto/model/linterna/scene.gltf");
+    Model mano("C:/Users/Alexis Lapo/Documents/ProyectoCompuGrafica/Proyecto/Proyecto/model/mano/scene.gltf");
+    Model casa("C:/Users/Alexis Lapo/Documents/ProyectoCompuGrafica/Proyecto/Proyecto/model/casa/scene.gltf");
+  
 
     // build and compile our shader zprogram
     // ------------------------------------
@@ -239,11 +238,29 @@ int main()
     lightingShader.setInt("material.diffuse1", 0); // Texture unit 0
 
 
-    
+
 
     float lightSpeed = 1.0f; // Velocidad de movimiento de la luz
     glm::vec3 lightDirection(1.0f, 0.0f, 0.0f); // Dirección de movimiento de la luz
 
+
+    // Antes del bucle de renderizado
+    int numArboles = 50; // Número de árboles
+    std::vector<glm::vec3> posicionesArboles;
+
+    srand(static_cast<unsigned int>(glfwGetTime())); // Inicializa la semilla de aleatoriedad
+
+    for (int i = 0; i < numArboles; ++i) {
+        float x = static_cast<float>(rand() % 100); // Genera posición x aleatoria entre 0 y 99
+        float z = static_cast<float>(rand() % 100); // Genera posición z aleatoria entre 0 y 99
+        posicionesArboles.push_back(glm::vec3(x, 0.0f, z)); // Asume que el suelo está en y = 0
+    }
+
+    // Imprimir posiciones de los árboles en la consola
+    std::cout << "Posiciones de los árboles:" << std::endl;
+    for (int i = 0; i < numArboles; ++i) {
+        std::cout << "Árbol " << i << ": (" << posicionesArboles[i].x << ", " << posicionesArboles[i].y << ", " << posicionesArboles[i].z << ")" << std::endl;
+    }
 
     // render loop
     // -----------
@@ -269,10 +286,10 @@ int main()
         // input
         // -----
         processInput(window);
-      //  std::cout << "Posición de la cámara: (" << camera.Position.x << ", " << camera.Position.y << ", " << camera.Position.z << ")" << std::endl;
+        //  std::cout << "Posición de la cámara: (" << camera.Position.x << ", " << camera.Position.y << ", " << camera.Position.z << ")" << std::endl;
 
-        // render
-        // ------
+          // render
+          // ------
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -281,11 +298,11 @@ int main()
 
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-  
+
 
 
         // Configuración del shader para los cubos
- 
+
         lightingShader.use();
         glActiveTexture(GL_TEXTURE0); // Cambia a la unidad de textura de los cubos
         glBindTexture(GL_TEXTURE_2D, diffuseMap1);
@@ -334,37 +351,65 @@ int main()
 
         // Transformación y dibujo del modelo
         ourShader.use();
+        ourShader.setMat4("projection", projection);
+        ourShader.setMat4("view", view);
 
+        // Dentro del bucle de renderización
+        for (int i = 0; i < numArboles; ++i) {
+            glm::mat4 model = glm::mat4(1.0f); // Matriz de modelo general para el árbol
+            model = glm::translate(model, posicionesArboles[i]); // Posiciona el modelo en la ubicación aleatoria
+            model = glm::scale(model, glm::vec3(0.2f)); // Ajusta el tamaño según sea necesario
 
-        glm::mat4 modelM = glm::mat4(1.0f);
-
-
-        for (auto& modelo : modelos) {
-            glm::mat4 modelM = glm::mat4(1.0f); // O cualquier transformación que quieras aplicar
-            // Configura las matrices/modelos uniformes y otras propiedades necesarias aquí
-
-            modelM = glm::translate(modelM, glm::vec3(40.0f, 1.2f, 40.0f)); // Ajusta la posición según sea necesario
-            // Aplica las rotaciones aquí
-          //  modelM = glm::rotate(modelM, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-            modelM = glm::rotate(modelM, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-            modelM = glm::scale(modelM, glm::vec3(0.2f)); // Ajusta el tamaño según sea necesario
-            ourShader.setMat4("model", modelM);
-            ourShader.setMat4("projection", projection);
-            ourShader.setMat4("view", view);
-            ourShader.setMat4("model", modelM);
-            modelo.Draw(ourShader); // Asume que tu clase Model tiene un método Draw
+            if (i % 2 == 0) {
+                // Para índices pares, usa el modelo de arbolViejo
+                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // Si es necesario rotar el modelo
+                ourShader.setMat4("model", model);
+                arbolViejo.Draw(ourShader);
+            }
+            else {
+                // Para índices impares, usa el modelo de arbol
+                // No se aplica rotación adicional, ajusta según sea necesario
+                model = glm::scale(model, glm::vec3(10.0f)); // Ajusta el escalamiento si es diferente para este modelo
+                ourShader.setMat4("model", model);
+                arbol.Draw(ourShader);
+            }
         }
 
 
-   
+
+        // Configura la transformación de la mano relativa a la cámara
+
+        glm::mat4 modelLinterna = glm::mat4(1.0f);
+        // Posición relativa a la cámara, ajusta estos valores según sea necesario
+        modelLinterna = glm::translate(modelLinterna, glm::vec3(0.35f, -0.40f, -0.75f));
+        modelLinterna = glm::rotate(modelLinterna, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        modelLinterna = glm::scale(modelLinterna, glm::vec3(0.15f));
+
+        // Aplica la inversa de la matriz de vista para colocar la mano en el espacio de la cámara
+        modelLinterna = glm::inverse(view) * modelLinterna;
+
+        // Configura el shader y dibuja la mano
+        ourShader.use();
+        ourShader.setMat4("projection", projection);
+        ourShader.setMat4("view", view); // Aquí estás pasando la matriz de vista, pero la transformación real ya ha sido aplicada a modelMano
+        ourShader.setMat4("model", modelLinterna);
+        linterna.Draw(ourShader);
+
+        //CASA
+        glm::mat4 modelCasa = glm::mat4(1.0f);
+        modelCasa = glm::translate(modelCasa, glm::vec3(30.0f, 0.35f, 30.0f)); // translate it down so it's at the center of the scene
+        modelCasa = glm::rotate(modelCasa, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        modelCasa = glm::scale(modelCasa, glm::vec3(2.0f));	// it's a bit too big for our scene, so scale it down
+        ourShader.setMat4("model", modelCasa);
+        casa.Draw(ourShader);
 
 
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
+
+        // Intercambio de buffers y eventos de GLFW
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
