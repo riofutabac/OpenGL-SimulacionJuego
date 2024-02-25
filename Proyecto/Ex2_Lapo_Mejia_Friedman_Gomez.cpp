@@ -108,11 +108,11 @@ int main()
 
     // load models
  
-    Model arbolViejo("C:/Users/Alexis Lapo/Documents/ProyectoCompuGrafica/Proyecto/Proyecto/model/tree/scene.gltf");
-    Model arbol("C:/Users/Alexis Lapo/Documents/ProyectoCompuGrafica/Proyecto/Proyecto/model/oldtree/scene.gltf");
-    Model linterna("C:/Users/Alexis Lapo/Documents/ProyectoCompuGrafica/Proyecto/Proyecto/model/linterna/scene.gltf");
-    Model mano("C:/Users/Alexis Lapo/Documents/ProyectoCompuGrafica/Proyecto/Proyecto/model/mano/scene.gltf");
-    Model casa("C:/Users/Alexis Lapo/Documents/ProyectoCompuGrafica/Proyecto/Proyecto/model/casa/scene.gltf");
+    Model arbolViejo("C:/model/tree/scene.gltf");
+    Model arbol("C:/model/oldtree/scene.gltf");
+    Model linterna("C:model/linterna/scene.gltf");
+    Model mano("C:/model/mano/scene.gltf");
+    Model casa("C:/model/casa/scene.gltf");
   
 
     // build and compile our shader zprogram
@@ -174,6 +174,64 @@ int main()
         -0.5f,  0.5f,  0.5f,       0.0f,  1.0f,  0.0f,       0.5343f, 0.5f,  // Esquina inferior izquierda  
         -0.5f,  0.5f, -0.5f,       0.0f,  1.0f,  0.0f,       0.5343f, 0.3264f  // Esquina superior izquierda  
     };
+
+    // coordenadas de los arboles
+    glm::vec3 posicionesArboles[] = {
+
+            //glm::vec3(35,0,43),// ARBOL DENTRO DE CASA
+            glm::vec3(97,0,67),
+            glm::vec3(71,0,95),
+            glm::vec3(11,0,03),
+            glm::vec3(70,0,53),
+            glm::vec3(13,0,79),
+            glm::vec3(66,0,53),
+            glm::vec3(81,0,47),
+            glm::vec3(42,0,69),
+            glm::vec3(96,0,66),
+            glm::vec3(02,0,87),
+            glm::vec3(8,0,57),
+            glm::vec3(41,0,74),
+            //glm::vec3(33,0,19),// arbol dentro de casa
+            glm::vec3(53,0,44),
+            glm::vec3(85,0,32),
+            glm::vec3(75,0,41),
+            glm::vec3(89,0,63),
+            glm::vec3(20,0,47),
+            glm::vec3(98,0,68),
+            glm::vec3(53,0,58),
+            glm::vec3(12,0,95),
+            glm::vec3(80,0,51),
+            //glm::vec3(33,0,19),
+            glm::vec3(64,0,70),
+            glm::vec3(03,0,25),
+
+            glm::vec3(05,0,78),
+            glm::vec3(48,0,29),
+            glm::vec3(54,0,01),
+            glm::vec3(06,0,45),
+            glm::vec3(59,0,30),
+            glm::vec3(92,0,20),
+            glm::vec3(80,0,80),
+            glm::vec3(67,0,17),
+            glm::vec3(24,0,79),
+            glm::vec3(84,0,10),
+            glm::vec3(03,0,45),
+            glm::vec3(10,0,06),
+            glm::vec3(16,0,12),
+            glm::vec3(17,0,60),
+            glm::vec3(53,0,85),
+            glm::vec3(36,0,70),
+            glm::vec3(98,0,53),
+            glm::vec3(04,0,94),
+            glm::vec3(48,0,46),
+            glm::vec3(85,0,56),
+            glm::vec3(35,0,63),
+            glm::vec3(56,0,41),
+            glm::vec3(74,0,39),
+            glm::vec3(14,0,50),
+    };
+
+    int tamanoPosicionesArboles = sizeof(posicionesArboles) / sizeof(posicionesArboles[0]);
 
     //SUELOOOOOOOOOOOOOOO
     // Ajustar el tamaño de este array para contener 10,000 posiciones (100 filas de 100)
@@ -241,26 +299,7 @@ int main()
 
 
     float lightSpeed = 1.0f; // Velocidad de movimiento de la luz
-    glm::vec3 lightDirection(1.0f, 0.0f, 0.0f); // Dirección de movimiento de la luz
-
-
-    // Antes del bucle de renderizado
-    int numArboles = 50; // Número de árboles
-    std::vector<glm::vec3> posicionesArboles;
-
-    srand(static_cast<unsigned int>(glfwGetTime())); // Inicializa la semilla de aleatoriedad
-
-    for (int i = 0; i < numArboles; ++i) {
-        float x = static_cast<float>(rand() % 100); // Genera posición x aleatoria entre 0 y 99
-        float z = static_cast<float>(rand() % 100); // Genera posición z aleatoria entre 0 y 99
-        posicionesArboles.push_back(glm::vec3(x, 0.0f, z)); // Asume que el suelo está en y = 0
-    }
-
-    // Imprimir posiciones de los árboles en la consola
-    std::cout << "Posiciones de los árboles:" << std::endl;
-    for (int i = 0; i < numArboles; ++i) {
-        std::cout << "Árbol " << i << ": (" << posicionesArboles[i].x << ", " << posicionesArboles[i].y << ", " << posicionesArboles[i].z << ")" << std::endl;
-    }
+    glm::vec3 lightDirection(1.0f, 0.0f, 0.0f); // Dirección de movimiento de la 
 
     // render loop
     // -----------
@@ -355,10 +394,10 @@ int main()
         ourShader.setMat4("view", view);
 
         // Dentro del bucle de renderización
-        for (int i = 0; i < numArboles; ++i) {
+        for (int i = 0; i < tamanoPosicionesArboles; ++i) {
             glm::mat4 model = glm::mat4(1.0f); // Matriz de modelo general para el árbol
             model = glm::translate(model, posicionesArboles[i]); // Posiciona el modelo en la ubicación aleatoria
-            model = glm::scale(model, glm::vec3(0.2f)); // Ajusta el tamaño según sea necesario
+            model = glm::scale(model, glm::vec3(0.2f));// Ajusta el tamaño según sea necesario
 
             if (i % 2 == 0) {
                 // Para índices pares, usa el modelo de arbolViejo
@@ -369,12 +408,19 @@ int main()
             else {
                 // Para índices impares, usa el modelo de arbol
                 // No se aplica rotación adicional, ajusta según sea necesario
-                model = glm::scale(model, glm::vec3(10.0f)); // Ajusta el escalamiento si es diferente para este modelo
+                model = glm::scale(model, glm::vec3(10.0f));
+                // Ajusta el escalamiento si es diferente para este modelo
                 ourShader.setMat4("model", model);
+
                 arbol.Draw(ourShader);
             }
         }
 
+        // Imprimir posiciones de los árboles en la consola
+        std::cout << "Posiciones actual jugador" << std::endl;
+        for (int i = 0; i < time; ++i) {
+            std::cout << "Posicion : " << camera.Position.x<<","<< camera.Position.z << std::endl;
+        }
 
 
         // Configura la transformación de la mano relativa a la cámara
