@@ -264,9 +264,9 @@ int main()
         // -----
         processInput(window);
 
-        // render
-        // ------
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+          // render
+          // ------
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         lightingShader.use();
@@ -364,7 +364,9 @@ int main()
         }
 
 
-        // Configura la transformación de la mano relativa a la cámara
+
+        // Configura la transformación de la linterna relativa a la cámara
+
         glm::mat4 modelLinterna = glm::mat4(1.0f);
         // Posición relativa a la cámara, ajusta estos valores según sea necesario
         modelLinterna = glm::translate(modelLinterna, glm::vec3(0.35f, -0.40f, -0.75f));
