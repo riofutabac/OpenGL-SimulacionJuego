@@ -35,9 +35,6 @@
     <None Include="shaders\shader_exercise16_mloading.vs">
       <Filter>Archivos de origen\shaders</Filter>
     </None>
-    <None Include="shaders\fragmentShader_lightcube.fs">
-      <Filter>Archivos de origen\shaders</Filter>
-    </None>
     <None Include="shaders\fragmentShader_materials.fs">
       <Filter>Archivos de origen\shaders</Filter>
     </None>
@@ -45,6 +42,9 @@
       <Filter>Archivos de origen\shaders</Filter>
     </None>
     <None Include="shaders\vertexShader_materials.vs">
+      <Filter>Archivos de origen\shaders</Filter>
+    </None>
+    <None Include="shaders\fragmentShader_lightcube.fs">
       <Filter>Archivos de origen\shaders</Filter>
     </None>
   </ItemGroup>
