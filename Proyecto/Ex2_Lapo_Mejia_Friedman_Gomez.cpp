@@ -17,8 +17,6 @@
 #include <vector>
 
 // Estructura para almacenar las transformaciones de cada modelo
-
-
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -40,7 +38,6 @@ const float Z_MIN_LIMIT = 0.0f;
 const float Z_MAX_LIMIT = 100.0f;
 const float CAMERA_HEIGHT_LIMIT = 2.5f; // Ya definido, incluido aquí para referencia
 bool flashlightEnabled = false; // La linterna está inicialmente apagada
-
 
 Camera camera(glm::vec3(50.0f, 2.5f, 49.0f));
 
@@ -102,14 +99,12 @@ int main()
 
     // build and compile our shader program
     // ------------------------------------
-    Shader lightingShader("shaders/vertexShader_materials.vs", "shaders/fragmentShader_materials.fs");
-    Shader lightingShader1("shaders/vertexShader_materials.vs", "shaders/fragmentShader_materials1.fs");
-    Shader lightCubeShader("shaders/vertexShader_lightcube.vs", "shaders/fragmentShader_lightcube.fs");
-    Shader ourShader("shaders/shader_exercise16_mloading.vs", "shaders/shader_exercise16_mloading.fs");
+    Shader lightingShader("shaders/vertexShader_materials.vs", "shaders/fragmentShader_materials.fs");  //RENDERIZA ILUMINACION (CASTER LIGHTS) Y MODELOS AFECTADOS POR LA LUZ
+    Shader lightCubeShader("shaders/vertexShader_lightcube.vs", "shaders/fragmentShader_lightcube.fs"); //RENDERIZA CUBOS BLANCOS DE LUZ (NO ESTAMOS USANDO)
+    Shader ourShader("shaders/shader_exercise16_mloading.vs", "shaders/shader_exercise16_mloading.fs"); //RENDERIZA MODELOS SON AFECCION DE LUZ (SKYMAP)
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
-
 
     float vertices[] = {
         // Coordenadas XYZ         // Normales XYZ          // Coordenadas de textura UV
@@ -173,49 +168,43 @@ int main()
         }
     }
 
-
     // first, configure the cube's VAO (and VBO)
     unsigned int VBO, cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &VBO);
-
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glBindVertexArray(cubeVAO);
 
+    //VAO PARA LOS CUBOS USADOS EN EL SUELO
+    glBindVertexArray(cubeVAO);
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     // normal attribute
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
    //texture attribute
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    //VAO CUBOS DE LUZ BLANCA
     // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
     unsigned int lightCubeVAO;
     glGenVertexArrays(1, &lightCubeVAO);
     glBindVertexArray(lightCubeVAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
     // note that we update the lamp's position attribute's stride to reflect the updated buffer data
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    unsigned int diffuseMap1 = loadTexture("textures/suelo.jpg");
+    //CARGA DE TEXTURA
+    unsigned int diffuseMap1 = loadTexture("textures/suelo.jpg"); //TEXTURA PARA EL SUELO
 
     // shader configuration
     // --------------------
     lightingShader.use();
     lightingShader.setInt("material.diffuse1", 0); // Texture unit 0
-
-    float lightSpeed = 1.0f; // Velocidad de movimiento de la luz
-    glm::vec3 lightDirection(1.0f, 0.0f, 0.0f); // Dirección de movimiento de la luz
-
 
     //LLENAR ARREGLOS CON POSICIONES AL AZAR PARA LUCES Y ARBOLES
     // Antes del bucle de renderizado
@@ -257,43 +246,33 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //PROPIEDADESDE LA LUZ PARA LA LINTERNA
-        
-        // be sure to activate shader when setting uniforms/drawing objects
+        //PROPIEDADES DE LA LUZ 
         lightingShader.use();
-
-        //Exercise 15 Task 4
-        lightingShader.setVec3("light.position", camera.Position);
-        lightingShader.setVec3("light.direction", camera.Front);
         lightingShader.setVec3("viewPos", camera.Position);
+        lightingShader.setFloat("material.shininess", 32.0f);//PROPIEDADES DEL MATERIAL
 
-        // light properties
-        if (flashlightEnabled) {
-            lightingShader.setVec3("light.ambient", 0.1f, 0.1f, 0.1f);
-            // we configure the diffuse intensity slightly higher; the right lighting conditions differ with each lighting method and environment.
-            // each environment and lighting type requires some tweaking to get the best out of your environment.	 
-            lightingShader.setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
-            lightingShader.setVec3("spotlight.specular", 0.0f, 0.0f, 0.0f);
+        // 1.PROPIEDADES DE LA LINTERNA
+        lightingShader.setVec3("spotLight.position", camera.Position);
+        lightingShader.setVec3("spotLight.direction", camera.Front);
+
+        if (flashlightEnabled) { //LOGICA DE ENCENDIDO Y APAGADO
+            lightingShader.setVec3("spotLight.ambient", 0.1f, 0.1f, 0.1f);
+            lightingShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+            lightingShader.setVec3("spotLight.specular", 0.0f, 0.0f, 0.0f);
         }
        else {
-           lightingShader.setVec3("light.ambient", 0.0f, 0.0f, 0.0f);
-           lightingShader.setVec3("light.diffuse", 0.0f, 0.0f, 0.0f); // Linterna apagada
-           lightingShader.setVec3("light.specular", 0.0f, 0.0f, 0.0f); // Linterna apagada
+           lightingShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+           lightingShader.setVec3("spotLight.diffuse", 0.0f, 0.0f, 0.0f); // Linterna apagada
+           lightingShader.setVec3("spotLight.specular", 0.0f, 0.0f, 0.0f); 
         }
 
-        //Exercise 15 Task 2
-        lightingShader.setFloat("light.constant", 1.0f);
-        lightingShader.setFloat("light.linear", 0.01f);
-        lightingShader.setFloat("light.quadratic", 0.017f);
-        lightingShader.setFloat("light.cutOff", glm::cos(glm::radians(10.5f)));
-        lightingShader.setFloat("light.outerCutOff", glm::cos(glm::radians(25.5f)));
-
-
-        // material properties
-        lightingShader.setFloat("material.shininess", 32.0f);
-
-    
-        // LUCES
+        lightingShader.setFloat("spotLight.constant", 1.0f);
+        lightingShader.setFloat("spotLight.linear", 0.01f);
+        lightingShader.setFloat("spotLight.quadratic", 0.017f);
+        lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(10.5f)));
+        lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(25.5f)));
+        
+        // 2. PROPIEDADES PARA LAS LUCES DIRECCIONALES
         glm::vec3 ambient(0.05f, 0.05f, 0.05f);
         glm::vec3 diffuse(0.8f, 0.8f, 0.8f);
         glm::vec3 specular(1.0f, 1.0f, 1.0f);
@@ -301,7 +280,7 @@ int main()
         float linear = 0.09f;
         float quadratic = 0.032f;
 
-        for (size_t i = 0; i < numLuces; ++i) {
+        for (size_t i = 0; i < numLuces; ++i) { 
             std::string baseName = "pointLights[" + std::to_string(i) + "].";
             lightingShader.setVec3(baseName + "position", pointLightPositions[i]);
             lightingShader.setVec3(baseName + "ambient", ambient);
@@ -322,10 +301,10 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         lightingShader.setMat4("model", model);
 
-        // Configuración del shader para los cubos
+        //RENDERIZAR MODELOS DE LOS ARBOLES EN LA ESCENA
+        //Configuración del shader para los cubos
         glActiveTexture(GL_TEXTURE0); // Cambia a la unidad de textura de los cubos
         glBindTexture(GL_TEXTURE_2D, diffuseMap1);
-
         glBindVertexArray(cubeVAO);
         // Modificar el bucle de dibujo para iterar sobre los 10,000 cubos
         for (unsigned int i = 0; i < 10000; i++) {
@@ -333,12 +312,11 @@ int main()
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
             lightingShader.setMat4("model", model);
-
             // Dibuja el cubo
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-        // RENDERIZAR LOS ARBOLES EN LA ESCENA
+        //RENDERIZAR MODELOS DE LOS ARBOLES EN LA ESCENA
         for (int i = 0; i < numArboles; ++i) {
             model = glm::mat4(1.0f); // Matriz de modelo general para el árbol
             model = glm::translate(model, posicionesArboles[i]); // Posiciona el modelo en la ubicación aleatoria
@@ -359,7 +337,7 @@ int main()
             }
         }
 
-        //MODELO DE LA LINTERNA
+        //RENDERIZAR MODELO DE LA LINTERNA
         // Configura la transformación de la linterna relativa a la cámara
         glm::mat4 modelLinterna = glm::mat4(1.0f);
         // Posición relativa a la cámara, ajusta estos valores según sea necesario
@@ -371,7 +349,7 @@ int main()
         lightingShader.setMat4("model", modelLinterna);
         linterna.Draw(lightingShader);
 
-        //MODELO DE LA CASA
+        //RENDERIZAR MODELO DE LA CASA
         glm::mat4 modelCasa = glm::mat4(1.0f);
         modelCasa = glm::translate(modelCasa, glm::vec3(30.0f, 0.35f, 30.0f)); // translate it down so it's at the center of the scene
         modelCasa = glm::rotate(modelCasa, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -379,8 +357,8 @@ int main()
         lightingShader.setMat4("model", modelCasa);
         casa.Draw(lightingShader);
 
-        // RENDERIZAR CUBOS DE LAS LUCES
-        lightCubeShader.use();
+        // RENDERIZAR CUBOS DE LAS LUCES  ///NO HACE FALTA QUE SE VEAN LOS CUBOS DE LUZ
+        /*lightCubeShader.use();
         lightCubeShader.setMat4("projection", projection);
         lightCubeShader.setMat4("view", view);
         glBindVertexArray(lightCubeVAO);
@@ -391,18 +369,14 @@ int main()
             model = glm::scale(model, glm::vec3(0.2f));
             lightCubeShader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        }*/
 
-        //MODELO DE LAS ESTRELLAS
+        //RENDERIZAR MODELO DE LAS ESTRELLAS (SKYMAP)
         ourShader.use();
-        //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
-        //glm::mat4 view = camera.GetViewMatrix();
         ourShader.setMat4("projection", projection);
         ourShader.setMat4("view", view);
-
         glm::mat4 modelStar = glm::mat4(1.0f);
         modelStar = glm::translate(modelStar, glm::vec3(30.0f, 0.35f, 30.0f)); // translate it down so it's at the center of the scene
-        //modelStar = glm::rotate(modelStar, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         modelStar = glm::scale(modelStar, glm::vec3(1000.0f));	// it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", modelStar);
         estrellas.Draw(ourShader);
@@ -411,7 +385,6 @@ int main()
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
@@ -459,7 +432,6 @@ void processInput(GLFWwindow* window)
     camera.Position = newPosition;
 }
 
-
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -468,7 +440,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
 }
-
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
