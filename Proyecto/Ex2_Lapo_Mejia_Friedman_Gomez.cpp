@@ -54,8 +54,6 @@ float lastFrame = 0.0f;
 
 int main()
 {
-
-
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
@@ -92,29 +90,22 @@ int main()
         return -1;
     }
 
-
-
     glEnable(GL_DEPTH_TEST);
 
     //MODELOS
-    // build and compile shaders
-    // -------------------------
-    Shader ourShader("shaders/shader_exercise16_mloading.vs", "shaders/shader_exercise16_mloading.fs");
-
     // load models
- 
+    Model estrellas("C:/model/cielo/scene.gltf");
+    Model arbolViejo("C:/model/tree/scene.gltf");
+    Model arbol("C:/model/oldtree/scene.gltf");
+    Model linterna("C:/model/linterna/scene.gltf");
+    Model casa("C:/model/casa/scene.gltf");
 
-    Model arbolViejo("C:/Users/isaac/Downloads/ProyectoCompuGrafica/Proyecto/Proyecto/model/tree/scene.gltf");
-    Model arbol("C:/Users/isaac/Downloads/ProyectoCompuGrafica/Proyecto/Proyecto/model/oldtree/scene.gltf");
-    Model linterna("C:/Users/isaac/Downloads/ProyectoCompuGrafica/Proyecto/Proyecto/model/linterna/scene.gltf");
-    Model mano("C:/Users/isaac/Downloads/ProyectoCompuGrafica/Proyecto/Proyecto/model/mano/scene.gltf");
-    Model casa("C:/Users/isaac/Downloads/ProyectoCompuGrafica/Proyecto/Proyecto/model/casa/scene.gltf");
-  
-
-    // build and compile our shader zprogram
+    // build and compile our shader program
     // ------------------------------------
     Shader lightingShader("shaders/vertexShader_materials.vs", "shaders/fragmentShader_materials.fs");
+    Shader lightingShader1("shaders/vertexShader_materials.vs", "shaders/fragmentShader_materials1.fs");
     Shader lightCubeShader("shaders/vertexShader_lightcube.vs", "shaders/fragmentShader_lightcube.fs");
+    Shader ourShader("shaders/shader_exercise16_mloading.vs", "shaders/shader_exercise16_mloading.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -171,17 +162,14 @@ int main()
         -0.5f,  0.5f, -0.5f,       0.0f,  1.0f,  0.0f,       0.5343f, 0.3264f  // Esquina superior izquierda  
     };
 
-    //SUELOOOOOOOOOOOOOOO
+    //ARREGLO DE POSICIONES PARA RENDEREIZA EL SUELO
     // Ajustar el tamaño de este array para contener 10,000 posiciones (100 filas de 100)
-
     glm::vec3 cubePositions[10000];
-
     // Llenar el array con posiciones para crear 100 filas de 100 cubos cada una
     int index = 0; // Índice para llenar el arreglo
     for (int j = 0; j < 100; j++) { // 100 filas
         for (int i = 0; i < 100; i++) { // 100 cubos por fila
             cubePositions[index++] = glm::vec3(i, 0.0f, j); // Ajusta 'i' y 'j' para cambiar la columna y la fila, respectivamente
-
         }
     }
 
@@ -207,7 +195,6 @@ int main()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
-
     // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
     unsigned int lightCubeVAO;
     glGenVertexArrays(1, &lightCubeVAO);
@@ -230,6 +217,7 @@ int main()
     glm::vec3 lightDirection(1.0f, 0.0f, 0.0f); // Dirección de movimiento de la luz
 
 
+    //LLENAR ARREGLOS CON POSICIONES AL AZAR PARA LUCES Y ARBOLES
     // Antes del bucle de renderizado
     int numArboles = 50; // Número de árboles
     int numLuces = 7; // Para editar la cantidad de luces, se debe de igual editar el numero en el FS
@@ -266,31 +254,45 @@ int main()
 
           // render
           // ------
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        //PROPIEDADESDE LA LUZ PARA LA LINTERNA
+        
+        // be sure to activate shader when setting uniforms/drawing objects
         lightingShader.use();
+
+        //Exercise 15 Task 4
+        lightingShader.setVec3("light.position", camera.Position);
+        lightingShader.setVec3("light.direction", camera.Front);
         lightingShader.setVec3("viewPos", camera.Position);
+
+        // light properties
+        if (flashlightEnabled) {
+            lightingShader.setVec3("light.ambient", 0.1f, 0.1f, 0.1f);
+            // we configure the diffuse intensity slightly higher; the right lighting conditions differ with each lighting method and environment.
+            // each environment and lighting type requires some tweaking to get the best out of your environment.	 
+            lightingShader.setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
+            lightingShader.setVec3("spotlight.specular", 0.0f, 0.0f, 0.0f);
+        }
+       else {
+           lightingShader.setVec3("light.ambient", 0.0f, 0.0f, 0.0f);
+           lightingShader.setVec3("light.diffuse", 0.0f, 0.0f, 0.0f); // Linterna apagada
+           lightingShader.setVec3("light.specular", 0.0f, 0.0f, 0.0f); // Linterna apagada
+        }
+
+        //Exercise 15 Task 2
+        lightingShader.setFloat("light.constant", 1.0f);
+        lightingShader.setFloat("light.linear", 0.01f);
+        lightingShader.setFloat("light.quadratic", 0.017f);
+        lightingShader.setFloat("light.cutOff", glm::cos(glm::radians(10.5f)));
+        lightingShader.setFloat("light.outerCutOff", glm::cos(glm::radians(25.5f)));
+
+
+        // material properties
         lightingShader.setFloat("material.shininess", 32.0f);
 
-
-
-        // LINTERNA
-        lightingShader.setVec3("spotLight.position", camera.Position);
-        lightingShader.setVec3("spotLight.direction", camera.Front);
-        lightingShader.setVec3("spotLight.ambient", 0.1f, 0.1f, 0.1f);
-        lightingShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-        lightingShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
-        lightingShader.setFloat("spotLight.constant", 1.0f);
-        lightingShader.setFloat("spotLight.linear", 0.05f);//alcance linterna, para mayor alcance reducimos valores
-        lightingShader.setFloat("spotLight.quadratic", 0.009f);//alcance linterna, para mayor alcance reducimos valores
-        lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(10.5f)));
-        lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(25.5f)));//radio linterna
-
-        // Bool para la tecla F
-        setFlashlightProperties(lightingShader, flashlightEnabled);
-
-
+    
         // LUCES
         glm::vec3 ambient(0.05f, 0.05f, 0.05f);
         glm::vec3 diffuse(0.8f, 0.8f, 0.8f);
@@ -311,7 +313,7 @@ int main()
         }
 
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
         glm::mat4 view = camera.GetViewMatrix();
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
@@ -336,62 +338,48 @@ int main()
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-
-        // Transformación y dibujo del modelo
-        ourShader.use();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
-
-        // Dentro del bucle de renderización
+        // RENDERIZAR LOS ARBOLES EN LA ESCENA
         for (int i = 0; i < numArboles; ++i) {
-            glm::mat4 model = glm::mat4(1.0f); // Matriz de modelo general para el árbol
+            model = glm::mat4(1.0f); // Matriz de modelo general para el árbol
             model = glm::translate(model, posicionesArboles[i]); // Posiciona el modelo en la ubicación aleatoria
             model = glm::scale(model, glm::vec3(0.2f)); // Ajusta el tamaño según sea necesario
 
             if (i % 2 == 0) {
                 // Para índices pares, usa el modelo de arbolViejo
                 model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // Si es necesario rotar el modelo
-                ourShader.setMat4("model", model);
-                arbolViejo.Draw(ourShader);
+                lightingShader.setMat4("model", model);
+                arbolViejo.Draw(lightingShader);
             }
             else {
                 // Para índices impares, usa el modelo de arbol
                 // No se aplica rotación adicional, ajusta según sea necesario
                 model = glm::scale(model, glm::vec3(10.0f)); // Ajusta el escalamiento si es diferente para este modelo
-                ourShader.setMat4("model", model);
-                arbol.Draw(ourShader);
+                lightingShader.setMat4("model", model);
+                arbol.Draw(lightingShader);
             }
         }
 
-
-
+        //MODELO DE LA LINTERNA
         // Configura la transformación de la linterna relativa a la cámara
-
         glm::mat4 modelLinterna = glm::mat4(1.0f);
         // Posición relativa a la cámara, ajusta estos valores según sea necesario
         modelLinterna = glm::translate(modelLinterna, glm::vec3(0.35f, -0.40f, -0.75f));
         modelLinterna = glm::rotate(modelLinterna, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         modelLinterna = glm::scale(modelLinterna, glm::vec3(0.15f));
-
-        // Aplica la inversa de la matriz de vista para colocar la mano en el espacio de la cámara
+        // Aplica la inversa de la matriz de vista para colocar la linterna en el espacio de la cámara
         modelLinterna = glm::inverse(view) * modelLinterna;
+        lightingShader.setMat4("model", modelLinterna);
+        linterna.Draw(lightingShader);
 
-        // Configura el shader y dibuja la mano
-        ourShader.use();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view); // Aquí estás pasando la matriz de vista, pero la transformación real ya ha sido aplicada a modelMano
-        ourShader.setMat4("model", modelLinterna);
-        linterna.Draw(ourShader);
-
-        //CASA
+        //MODELO DE LA CASA
         glm::mat4 modelCasa = glm::mat4(1.0f);
         modelCasa = glm::translate(modelCasa, glm::vec3(30.0f, 0.35f, 30.0f)); // translate it down so it's at the center of the scene
         modelCasa = glm::rotate(modelCasa, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         modelCasa = glm::scale(modelCasa, glm::vec3(2.0f));	// it's a bit too big for our scene, so scale it down
-        ourShader.setMat4("model", modelCasa);
-        casa.Draw(ourShader);
+        lightingShader.setMat4("model", modelCasa);
+        casa.Draw(lightingShader);
 
-        //CUBOS DE LAS LUCES
+        // RENDERIZAR CUBOS DE LAS LUCES
         lightCubeShader.use();
         lightCubeShader.setMat4("projection", projection);
         lightCubeShader.setMat4("view", view);
@@ -405,6 +393,19 @@ int main()
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
+        //MODELO DE LAS ESTRELLAS
+        ourShader.use();
+        //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
+        //glm::mat4 view = camera.GetViewMatrix();
+        ourShader.setMat4("projection", projection);
+        ourShader.setMat4("view", view);
+
+        glm::mat4 modelStar = glm::mat4(1.0f);
+        modelStar = glm::translate(modelStar, glm::vec3(30.0f, 0.35f, 30.0f)); // translate it down so it's at the center of the scene
+        //modelStar = glm::rotate(modelStar, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        modelStar = glm::scale(modelStar, glm::vec3(1000.0f));	// it's a bit too big for our scene, so scale it down
+        ourShader.setMat4("model", modelStar);
+        estrellas.Draw(ourShader);
 
         // Intercambio de buffers y eventos de GLFW
         glfwSwapBuffers(window);
@@ -445,7 +446,6 @@ void processInput(GLFWwindow* window)
         newPosition -= glm::normalize(glm::cross(frontHorizontal, camera.Up)) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         newPosition += glm::normalize(glm::cross(frontHorizontal, camera.Up)) * cameraSpeed;
-
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
         flashlightEnabled = !flashlightEnabled; // Toggle estado de la linterna
 
