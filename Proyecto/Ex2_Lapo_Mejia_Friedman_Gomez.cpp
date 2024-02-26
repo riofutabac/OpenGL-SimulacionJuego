@@ -159,8 +159,6 @@ int main()
 
     // coordenadas de los arboles
     glm::vec3 posicionesArboles[] = {
-
-        //glm::vec3(35,0,43),// ARBOL DENTRO DE CASA
         glm::vec3(97,0,67),
         glm::vec3(71,0,95),
         glm::vec3(11,0,03),
@@ -173,7 +171,6 @@ int main()
         glm::vec3(02,0,87),
         glm::vec3(8,0,57),
         glm::vec3(41,0,74),
-        //glm::vec3(33,0,19),// arbol dentro de casa
         glm::vec3(53,0,44),
         glm::vec3(85,0,32),
         glm::vec3(75,0,41),
@@ -183,7 +180,6 @@ int main()
         glm::vec3(53,0,58),
         glm::vec3(12,0,95),
         glm::vec3(80,0,51),
-        //glm::vec3(33,0,19),
         glm::vec3(64,0,70),
         glm::vec3(03,0,25),
         glm::vec3(05,0,78),
@@ -213,13 +209,11 @@ int main()
     };
 
     //ARREGLO DE POSICIONES PARA RENDEREIZA EL SUELO
-    // Ajustar el tamaño de este array para contener 10,000 posiciones (100 filas de 100)
     glm::vec3 cubePositions[10000];
-    // Llenar el array con posiciones para crear 100 filas de 100 cubos cada una
-    int index = 0; // Índice para llenar el arreglo
+    int index = 0; 
     for (int j = 0; j < 100; j++) { // 100 filas
         for (int i = 0; i < 100; i++) { // 100 cubos por fila
-            cubePositions[index++] = glm::vec3(i, 0.0f, j); // Ajusta 'i' y 'j' para cambiar la columna y la fila, respectivamente
+            cubePositions[index++] = glm::vec3(i, 0.0f, j); 
         }
     }
 
@@ -261,13 +255,12 @@ int main()
     lightingShader.use();
     lightingShader.setInt("material.diffuse1", 0); // Texture unit 0
 
-    //LLENAR ARREGLOS CON POSICIONES AL AZAR PARA LUCES Y ARBOLES
-    // Antes del bucle de renderizado
+    //LLENAR ARREGLOS CON POSICIONES AL AZAR PARA LUCES
     int numLuces = 7; // Para editar la cantidad de luces, se debe de igual editar el numero en el FS
     std::vector<glm::vec3> pointLightPositions;
     int tamanoPosicionesArboles = sizeof(posicionesArboles) / sizeof(posicionesArboles[0]);
 
-    srand(static_cast<unsigned int>(glfwGetTime())); // Inicializa la semilla de aleatoriedad
+    srand(static_cast<unsigned int>(glfwGetTime()));
 
     for (int i = 0; i < numLuces; ++i) {
         float x = static_cast<float>(rand() % 100); // Genera posición x aleatoria entre 0 y 99
@@ -303,16 +296,8 @@ int main()
         lightingShader.setVec3("spotLight.position", camera.Position);
         lightingShader.setVec3("spotLight.direction", camera.Front);
 
-        if (flashlightEnabled) { //LOGICA DE ENCENDIDO Y APAGADO
-            lightingShader.setVec3("spotLight.ambient", 0.1f, 0.1f, 0.1f);
-            lightingShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-            lightingShader.setVec3("spotLight.specular", 0.0f, 0.0f, 0.0f);
-        }
-       else {
-           lightingShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-           lightingShader.setVec3("spotLight.diffuse", 0.0f, 0.0f, 0.0f); // Linterna apagada
-           lightingShader.setVec3("spotLight.specular", 0.0f, 0.0f, 0.0f); 
-        }
+        // Funcion prendido y apagado, logica en ella
+        setFlashlightProperties(lightingShader, flashlightEnabled);
 
         lightingShader.setFloat("spotLight.constant", 1.0f);
         lightingShader.setFloat("spotLight.linear", 0.01f);
@@ -384,13 +369,6 @@ int main()
                 arbol.Draw(lightingShader);
             }
         }
-       
-
-        // Imprimir posiciones de los árboles en la consola
-        std::cout << "Posiciones actual jugador" << std::endl;
-        for (int i = 0; i < currentFrame; ++i) {
-            std::cout << "Posicion : " << camera.Position.x << "," << camera.Position.y<<","<<camera.Position.z << std::endl;
-        }
 
         //RENDERIZAR MODELO DE LA LINTERNA
         // Configura la transformación de la linterna relativa a la cámara
@@ -406,7 +384,7 @@ int main()
 
         //RENDERIZAR MODELO DE LA CASA
         glm::mat4 modelCasa = glm::mat4(1.0f);
-        modelCasa = glm::translate(modelCasa, glm::vec3(30.0f, 0.35f, 30.0f)); // translate it down so it's at the center of the scene
+        modelCasa = glm::translate(modelCasa, glm::vec3(30.0f, 0.0f, 30.0f)); // translate it down so it's at the center of the scene
         modelCasa = glm::rotate(modelCasa, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         modelCasa = glm::scale(modelCasa, glm::vec3(2.0f));	// it's a bit too big for our scene, so scale it down
         lightingShader.setMat4("model", modelCasa);
@@ -431,10 +409,39 @@ int main()
         ourShader.setMat4("projection", projection);
         ourShader.setMat4("view", view);
         glm::mat4 modelStar = glm::mat4(1.0f);
-        modelStar = glm::translate(modelStar, glm::vec3(30.0f, 0.35f, 30.0f)); // translate it down so it's at the center of the scene
+        modelStar = glm::translate(modelStar, glm::vec3(30.0f, 0.0f, 30.0f)); // translate it down so it's at the center of the scene
         modelStar = glm::scale(modelStar, glm::vec3(1000.0f));	// it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", modelStar);
         estrellas.Draw(ourShader);
+
+        // Definir un radio de colisión para la cámara (ajústalo según sea necesario)
+        const float cameraCollisionRadius = 1.0f;
+        const float treeCollisionRadius = 1.5f;
+
+        // Verificar colisiones con árboles
+        for (int i = 0; i < tamanoPosicionesArboles; ++i) {
+            // Calcula la dirección desde la posición de la cámara hasta la posición del árbol
+            glm::vec3 cameraToTree = posicionesArboles[i] - camera.Position;
+
+            // Calcula la distancia horizontal entre la cámara y el árbol (en el plano xz)
+            float distanceXZ = glm::length(glm::vec2(cameraToTree.x, cameraToTree.z));
+
+            // Si la distancia horizontal es menor que la suma de los radios de colisión de la cámara y el árbol,
+            // entonces hay una colisión
+            if (distanceXZ < (cameraCollisionRadius + treeCollisionRadius)) {
+                // Calcular la dirección de colisión
+                glm::vec3 collisionDirection = glm::normalize(cameraToTree);
+
+                // Calcular la distancia de corrección para evitar la colisión
+                float correctionDistance = (cameraCollisionRadius + treeCollisionRadius) - distanceXZ;
+
+                // Ajustar la posición de la cámara para evitar la colisión en la dirección opuesta a la colisión
+                camera.Position -= collisionDirection * correctionDistance;
+            }
+        }
+
+
+
 
         // Intercambio de buffers y eventos de GLFW
         glfwSwapBuffers(window);
@@ -536,9 +543,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     camera.ProcessMouseScroll(yoffset);
 }
 
-//Exercise 14 Task 2
-// utility function for loading a 2D texture from file
-// ---------------------------------------------------
 unsigned int loadTexture(char const* path)
 {
     unsigned int textureID;
