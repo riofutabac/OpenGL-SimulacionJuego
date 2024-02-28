@@ -398,7 +398,7 @@ int main()
 
         //RENDERIZAR MODELO DEl ZOMBIe
         //Renderizar 10 modelos de zombies en posiciones aleatorias diferentes
-       for (int i = 0; i < 4; ++i) {
+       for (float i = 0; i <0.001; ++i) {
             // Generar una nueva posición aleatoria para el zombie
             glm::vec3 randomZombiePosition = generateRandomZombiePosition();
 
@@ -505,7 +505,7 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    float cameraSpeed = 20.0f * deltaTime; // Ajusta esto según la velocidad deseada
+    float cameraSpeed = 5.0f * deltaTime; // Ajusta esto según la velocidad deseada
     glm::vec3 newPosition = camera.Position;
 
     // Copia temporal del vector Front sin la componente y para el movimiento
