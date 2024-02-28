@@ -23,13 +23,13 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void setFlashlightProperties(Shader& shader, bool enabled);
 
-
 unsigned int loadTexture(const char* path);
-
+float getRandomFloat(float min, float max);
+glm::vec3 generateRandomZombiePosition();
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1080;
 
 // Límites para el movimiento de la cámara en el mapa 100x100
 const float X_MIN_LIMIT = 0.0f;
@@ -64,7 +64,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Alexis Lapo CI:1723053151", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Grupo6", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -96,6 +96,8 @@ int main()
     Model arbol("C:/model/oldtree/scene.gltf");
     Model linterna("C:/model/linterna/scene.gltf");
     Model casa("C:/model/casa/scene.gltf");
+    Model zombie("C:/model/zombie/scene.gltf");
+    Model cementerio("C:/model/cementerio3/scene.gltf");
 
     // build and compile our shader program
     // ------------------------------------
@@ -268,8 +270,13 @@ int main()
         pointLightPositions.push_back(glm::vec3(x, 10.0f, z)); // La altura 'y' es constante para todas las luces
     }
 
+
     // render loop
     // -----------
+
+    const float zombieMovementSpeed = 0.01f;
+
+
     while (!glfwWindowShouldClose(window))
     {
         // per-frame time logic
@@ -298,12 +305,11 @@ int main()
 
         // Funcion prendido y apagado, logica en ella
         setFlashlightProperties(lightingShader, flashlightEnabled);
-
         lightingShader.setFloat("spotLight.constant", 1.0f);
         lightingShader.setFloat("spotLight.linear", 0.01f);
         lightingShader.setFloat("spotLight.quadratic", 0.017f);
-        lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(10.5f)));
-        lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(25.5f)));
+        lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+        lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(20.5f)));
         
         // 2. PROPIEDADES PARA LAS LUCES DIRECCIONALES
         glm::vec3 ambient(0.05f, 0.05f, 0.05f);
@@ -390,6 +396,20 @@ int main()
         lightingShader.setMat4("model", modelCasa);
         casa.Draw(lightingShader);
 
+        //RENDERIZAR MODELO DEl ZOMBIe
+        //Renderizar 10 modelos de zombies en posiciones aleatorias diferentes
+       for (int i = 0; i < 4; ++i) {
+            // Generar una nueva posición aleatoria para el zombie
+            glm::vec3 randomZombiePosition = generateRandomZombiePosition();
+
+            // Renderizar el modelo de zombie en la nueva posición aleatoria
+            glm::mat4 modelZombie = glm::mat4(1.0f);
+            modelZombie = glm::translate(modelZombie, randomZombiePosition); // translate it to the new random position
+            modelZombie = glm::scale(modelZombie, glm::vec3(1.8f)); // scale it
+            lightingShader.setMat4("model", modelZombie);
+            zombie.Draw(lightingShader);
+        }
+
         // RENDERIZAR CUBOS DE LAS LUCES  ///NO HACE FALTA QUE SE VEAN LOS CUBOS DE LUZ
         /*lightCubeShader.use();
         lightCubeShader.setMat4("projection", projection);
@@ -413,6 +433,8 @@ int main()
         modelStar = glm::scale(modelStar, glm::vec3(1000.0f));	// it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", modelStar);
         estrellas.Draw(ourShader);
+
+       
 
         // Definir un radio de colisión para la cámara (ajústalo según sea necesario)
         const float cameraCollisionRadius = 1.0f;
@@ -440,9 +462,6 @@ int main()
             }
         }
 
-
-
-
         // Intercambio de buffers y eventos de GLFW
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -459,6 +478,25 @@ int main()
     glfwTerminate();
     return 0;
 }
+
+glm::vec3 generateRandomZombiePosition()
+{
+    // Generar coordenadas x, z aleatorias dentro de un rango en el escenario
+    float x = getRandomFloat(0.0f, 100.0f);
+    float z = getRandomFloat(0.0f, 100.0f);
+
+    // La posición y será la altura del terreno en las coordenadas x, z (puedes implementar esta función)
+    ///float y = getHeightFromTerrain(x, z);
+
+    return glm::vec3(x, 1.0f, z);
+}
+
+// Función para generar un número aleatorio en el rango especificado
+float getRandomFloat(float min, float max)
+{
+    return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
+}
+
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
@@ -526,11 +564,13 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 void setFlashlightProperties(Shader& shader, bool enabled) {
     if (enabled) {
         // Configura las propiedades de la linterna para que esté "encendida"
+        shader.setVec3("spotLight.ambient", 0.1f, 0.1f, 0.1f);
         shader.setVec3("spotLight.diffuse", 0.8f, 0.8f, 0.8f); // luz difusa intensa
-        shader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f); // luz especular intensa
+        shader.setVec3("spotLight.specular", 0.0f, 0.0f, 0.0f); // luz especular intensa
     }
     else {
         // Configura las propiedades de la linterna para simular que está "apagada"
+        shader.setVec3("spotLight.ambient", 0.1f, 0.1f, 0.1f);
         shader.setVec3("spotLight.diffuse", 0.0f, 0.0f, 0.0f); // luz difusa apagada
         shader.setVec3("spotLight.specular", 0.0f, 0.0f, 0.0f); // luz especular apagada
     }
