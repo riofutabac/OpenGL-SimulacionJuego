@@ -25,7 +25,7 @@ Para ejecutar este proyecto, necesitarás las siguientes bibliotecas:
 ### Clonar el repositorio
 
 ```bash
-git clone https://tu-repositorio.com/proyecto_grupo6_opengl.git
+git clone 
 cd proyecto_grupo6_opengl
 ```
 
